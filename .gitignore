@@ -1,0 +1,13 @@
+# ferramenta privada de cadastro (não publicar)
+add_data.py
+
+# dados de origem antigos (o banco tupi.db é a fonte atual)
+acervo_frases.json
+acervo_palavras.json
+
+# ambiente virtual e arquivos gerados
+.venv/
+venv/
+__pycache__/
+*.pyc
+.mypy_cache/
