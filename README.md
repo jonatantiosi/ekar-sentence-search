@@ -1,5 +1,7 @@
 # Ekar — Tupi-Portuguese sentence search
 
+**Try it live: https://ekar-sentence-search.onrender.com/**
+
 Ekar (*ekar*, "search" in Tupi) is a small web app for searching example sentences in Tupi (Tupi Antigo), with Portuguese translations, and for looking up word definitions.
 
 ## Features
