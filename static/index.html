@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ekar — Pesquisa Tupi-Português</title>
+    <style>
+        /* Paleta inspirada em pigmentos naturais:
+           urucum (vermelho), jenipapo (preto), açafrão/ocre (amarelo),
+           tabatinga (branco) e terracota (tons terrosos) */
+        :root {
+            --fundo: #f5efe6;      /* tabatinga */
+            --texto: #2a2320;      /* jenipapo */
+            --secundario: #6e5f55; /* terra */
+            --destaque: #b5361f;   /* urucum */
+            --ocre: #c9961f;       /* açafrão */
+            --cartao: #fffaf3;
+            --borda: #d9c9b5;      /* argila */
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --fundo: #1f1a17;
+                --texto: #f1e9dc;
+                --secundario: #b3a392;
+                --destaque: #e0643a;
+                --ocre: #e0b04a;
+                --cartao: #2d2622;
+                --borda: #4a3c33;
+            }
+        }
+        :root[data-theme="dark"] {
+            --fundo: #1f1a17;
+            --texto: #f1e9dc;
+            --secundario: #b3a392;
+            --destaque: #e0643a;
+            --ocre: #e0b04a;
+            --cartao: #2d2622;
+            --borda: #4a3c33;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--fundo);
+            color: var(--texto);
+            font-family: Georgia, 'Times New Roman', serif;
+            line-height: 1.5;
+        }
+        main {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 48px 16px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin: 0 0 4px;
+            color: var(--destaque);
+        }
+        .subtitulo {
+            margin: 0 0 32px;
+            color: var(--secundario);
+        }
+        form {
+            display: flex;
+            gap: 8px;
+        }
+        input[type="search"] {
+            flex: 1;
+            min-width: 0;
+            font: inherit;
+            font-size: 1.1rem;
+            padding: 10px 14px;
+            border: 1px solid var(--borda);
+            border-radius: 8px;
+            background: var(--cartao);
+            color: var(--texto);
+        }
+        button {
+            font: inherit;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: var(--destaque);
+            color: var(--fundo);
+            cursor: pointer;
+        }
+        button:disabled { opacity: 0.6; cursor: wait; }
+        #definicao {
+            margin: 24px 0 0;
+            padding: 16px;
+            background: var(--cartao);
+            border: 1px solid var(--borda);
+            border-left: 4px solid var(--ocre);
+            border-radius: 8px;
+        }
+        #definicao strong { color: var(--destaque); }
+        #status {
+            margin: 20px 0 0;
+            color: var(--secundario);
+            min-height: 1.5em;
+        }
+        #resultados {
+            list-style: none;
+            padding: 0;
+            margin: 12px 0 0;
+        }
+        #resultados li {
+            background: var(--cartao);
+            border: 1px solid var(--borda);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+        }
+        .tupi { font-size: 1.15rem; font-style: italic; margin: 0 0 4px; }
+        .traducao { margin: 0; color: var(--secundario); }
+        .fonte { margin: 8px 0 0; font-size: 0.85rem; color: var(--secundario); }
+        .fonte a { color: var(--destaque); }
+        .erro { color: #b03a2e; }
+        @media (max-width: 480px) {
+            form { flex-direction: column; }
+            button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Ekar</h1>
+    <p class="subtitulo">Pesquisa em Tupi-Português</p>
+
+    <form id="formulario">
+        <input type="search" id="termo" placeholder="Digite uma palavra em Tupi" required maxlength="100" autocomplete="off" autofocus>
+        <button type="submit" id="botao">Pesquisar</button>
+    </form>
+
+    <div id="definicao" hidden></div>
+    <p id="status" role="status"></p>
+    <ul id="resultados"></ul>
+</main>
+
+<script>
+    const formulario = document.getElementById('formulario');
+    const termo = document.getElementById('termo');
+    const botao = document.getElementById('botao');
+    const status = document.getElementById('status');
+    const resultados = document.getElementById('resultados');
+    const definicao = document.getElementById('definicao');
+
+    function limpar() {
+        status.textContent = '';
+        status.classList.remove('erro');
+        resultados.replaceChildren();
+        definicao.hidden = true;
+        definicao.replaceChildren();
+    }
+
+    function mostrarDefinicao(palavra, texto) {
+        const titulo = document.createElement('strong');
+        titulo.textContent = palavra;
+        definicao.append(titulo, ' — ', texto);
+        definicao.hidden = false;
+    }
+
+    function mostrarFrases(frases) {
+        for (const { tupi, traducao, fonte } of frases) {
+            const item = document.createElement('li');
+            const linhaTupi = document.createElement('p');
+            linhaTupi.className = 'tupi';
+            linhaTupi.textContent = tupi;
+            const linhaTraducao = document.createElement('p');
+            linhaTraducao.className = 'traducao';
+            linhaTraducao.textContent = traducao;
+            item.append(linhaTupi, linhaTraducao);
+
+            if (fonte && /^https?:\/\//.test(fonte)) {
+                const linhaFonte = document.createElement('p');
+                linhaFonte.className = 'fonte';
+                linhaFonte.append('Fonte: ');
+                const link = document.createElement('a');
+                link.href = fonte;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = new URL(fonte).hostname;
+                linhaFonte.append(link);
+                item.append(linhaFonte);
+            }
+            resultados.append(item);
+        }
+    }
+
+    formulario.addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+        const palavra = termo.value.trim();
+        if (!palavra) return;
+
+        limpar();
+        botao.disabled = true;
+        status.textContent = 'Pesquisando...';
+
+        try {
+            const resposta = await fetch('/api/search?q=' + encodeURIComponent(palavra));
+            if (!resposta.ok) {
+                const erro = await resposta.json().catch(() => ({}));
+                throw new Error(erro.detail || 'Não foi possível realizar a busca.');
+            }
+            const dados = await resposta.json();
+
+            if (dados.definicao) {
+                mostrarDefinicao(dados.busca, dados.definicao);
+            }
+
+            if (dados.frases.length === 0) {
+                status.textContent = 'Nenhuma frase encontrada com essa palavra.';
+            } else {
+                status.textContent = dados.frases.length + ' frase(s) encontrada(s).';
+                mostrarFrases(dados.frases);
+            }
+        } catch (err) {
+            status.textContent = err.message;
+            status.classList.add('erro');
+        } finally {
+            botao.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>

@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS sentences (
     id           INTEGER PRIMARY KEY,
     tupi         TEXT NOT NULL UNIQUE,
     normalized   TEXT NOT NULL,
-    translation  TEXT NOT NULL
+    translation  TEXT NOT NULL,
+    fonte        TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_words_normalized ON words(normalized);
@@ -51,6 +52,12 @@ def normalizar(texto: str) -> str:
 
 def criar_tabelas(conexao):
     conexao.executescript(SCHEMA)
+
+    # bancos criados antes da coluna "fonte" existir precisam dela adicionada
+    colunas = [linha[1] for linha in conexao.execute('PRAGMA table_info(sentences)')]
+    if 'fonte' not in colunas:
+        conexao.execute('ALTER TABLE sentences ADD COLUMN fonte TEXT')
+        conexao.commit()
 
 
 def carregar_json(caminho):

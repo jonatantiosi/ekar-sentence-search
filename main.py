@@ -35,8 +35,11 @@ def main():
                         continue
 
                     print()
-                    for frase, traducao in frases:
-                        print(f"Frase: {frase}\nTradução: {traducao}\n")
+                    for frase, traducao, fonte in frases:
+                        print(f"Frase: {frase}\nTradução: {traducao}")
+                        if fonte:
+                            print(f"Fonte: {fonte}")
+                        print()
 
                     definicao = buscar_definicao(conexao, palavra)
                     if definicao is None:

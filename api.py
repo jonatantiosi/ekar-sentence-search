@@ -1,11 +1,22 @@
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse
 
 from search import buscar_definicao, conectar, pesquisar_frases
+
+PASTA_STATIC = Path(__file__).parent / 'static'
 
 app = FastAPI(
     title='Busca de sentenças Tupi-Português',
     description='API somente leitura para pesquisar frases e palavras.',
 )
+
+
+@app.get('/', include_in_schema=False)
+def pagina_inicial():
+    '''Página de busca'''
+    return FileResponse(PASTA_STATIC / 'index.html')
 
 
 @app.get('/api/search')
@@ -24,7 +35,10 @@ def pesquisar(q: str = Query(..., max_length=100, description='Palavra a pesquis
     return {
         'busca': q,
         'definicao': definicao,
-        'frases': [{'tupi': tupi, 'traducao': traducao} for tupi, traducao in frases],
+        'frases': [
+            {'tupi': tupi, 'traducao': traducao, 'fonte': fonte}
+            for tupi, traducao, fonte in frases
+        ],
     }
 
 
